@@ -28,7 +28,7 @@ namespace simulator_cli_client.Services
         {
             using var content = new MultipartFormDataContent();
 
-            content.Add(new StringContent(deviceName), CLIConstants.DeviceNameFile);
+            content.Add(new StringContent(deviceName), CLIConstants.DeviceNameField);
 
             using var telemetryStream = File.OpenRead(telemetryFilePath);
             using var telemetryContent = new StreamContent(telemetryStream);
@@ -60,13 +60,11 @@ namespace simulator_cli_client.Services
             return result?.Success ?? false;
         }
 
-        public async Task<bool> StartDeviceChannelsAsync(string deviceName, CancellationToken ct = default)
+        public async Task<StartDeviceResponse> StartDeviceChannelsAsync(string deviceName, CancellationToken ct = default)
         {
             var response = await _httpClient.PostAsJsonAsync(ProxyAPIs.START_DEVICE_ROUTE, new DeviceNameRequest(deviceName), ct);
-            if (!response.IsSuccessStatusCode) return false;
-
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse>(cancellationToken: ct);
-            return result?.Success ?? false;
+            return await response.Content.ReadFromJsonAsync<StartDeviceResponse>(cancellationToken: ct)
+                   ?? new StartDeviceResponse(false, UNKNOWN_ERROR, null);
         }
 
         public async Task<bool> StopDeviceChannelsAsync(string deviceName, CancellationToken ct = default)
@@ -78,12 +76,11 @@ namespace simulator_cli_client.Services
             return result?.Success ?? false;
         }
 
-        public async Task<ApiResponse> StartAllDevicesChannelsAsync(CancellationToken ct = default)
+        public async Task<StartDeviceResponse> StartAllDevicesChannelsAsync(CancellationToken ct = default)
         {
             var response = await _httpClient.PostAsync(ProxyAPIs.STARTALL_DEVICE_ROUTE, null, ct);
-            var re = await response.Content.ReadAsStringAsync();
-            return await response.Content.ReadFromJsonAsync<ApiResponse>(cancellationToken: ct)
-                   ?? new ApiResponse(false, UNKNOWN_ERROR);
+            return await response.Content.ReadFromJsonAsync<StartDeviceResponse>(cancellationToken: ct)
+                   ?? new StartDeviceResponse(false, UNKNOWN_ERROR, null);
         }
 
         public async Task<ApiResponse> StopAllDevicesChannelsAsync(CancellationToken ct = default)

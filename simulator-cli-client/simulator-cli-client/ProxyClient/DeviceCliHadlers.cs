@@ -1,7 +1,9 @@
 ﻿using Spectre.Console;
 using simulator_cli_client.Constants;
 using simulator_cli_client.Interfaces;
+using simulator_cli_client.Modules;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -18,12 +20,12 @@ public static class DeviceCliHandlers
         }
         catch (HttpRequestException ex)
         {
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_NETWORK, ex.Message));
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_NETWORK, Markup.Escape(ex.Message)));
             AnsiConsole.MarkupLine(CLIConstants.UI.ERR_NETWORK_HINT);
         }
         catch (FileNotFoundException ex)
         {
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_FILE_NOT_FOUND, ex.FileName));
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_FILE_NOT_FOUND, Markup.Escape(ex.FileName ?? string.Empty)));
         }
         catch (TaskCanceledException)
         {
@@ -31,7 +33,7 @@ public static class DeviceCliHandlers
         }
         catch (Exception ex)
         {
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_UNEXPECTED, ex.Message));
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_UNEXPECTED, Markup.Escape(ex.Message)));
         }
     }
 
@@ -53,7 +55,7 @@ public static class DeviceCliHandlers
 
         for (int i = 0; i < devices.Count; i++)
         {
-            table.AddRow((i + 1).ToString(), $"[cyan]{devices[i]}[/]");
+            table.AddRow((i + 1).ToString(), $"[cyan]{Markup.Escape(devices[i])}[/]");
         }
 
         AnsiConsole.Write(table);
@@ -66,9 +68,15 @@ public static class DeviceCliHandlers
             .StartAsync(CLIConstants.UI.STATUS_STARTING_ALL, async _ => await client.StartAllDevicesChannelsAsync());
 
         if (result.Success)
-            AnsiConsole.MarkupLine($"[green] {result.Message ?? CLIConstants.UI.MSG_START_ALL_SUCCESS}[/]");
+        {
+            AnsiConsole.MarkupLine($"[green]✔ {Markup.Escape(result.Message ?? CLIConstants.UI.MSG_START_ALL_SUCCESS)}[/]");
+            DisplayStreamsTable(result.Streams);
+        }
         else
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_ACTION_FAILED, result.Message));
+        {
+            var msg = Markup.Escape(result.Message ?? CLIConstants.UNKNOWN_ERROR);
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_ACTION_FAILED, msg));
+        }
     }
 
     public static async Task HandleStopAllDevicesAsync(IUAVSimulatorCilent client)
@@ -78,9 +86,14 @@ public static class DeviceCliHandlers
             .StartAsync(CLIConstants.UI.STATUS_STOPPING_ALL, async _ => await client.StopAllDevicesChannelsAsync());
 
         if (result.Success)
-            AnsiConsole.MarkupLine($"[green] {result.Message ?? CLIConstants.UI.MSG_STOP_ALL_SUCCESS}[/]");
+        {
+            AnsiConsole.MarkupLine($"[green]✔ {Markup.Escape(result.Message ?? CLIConstants.UI.MSG_STOP_ALL_SUCCESS)}[/]");
+        }
         else
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_ACTION_FAILED, result.Message));
+        {
+            var msg = Markup.Escape(result.Message ?? CLIConstants.UNKNOWN_ERROR);
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_ACTION_FAILED, msg));
+        }
     }
 
     public static async Task HandleStartSpecificDeviceAsync(IUAVSimulatorCilent client)
@@ -97,13 +110,19 @@ public static class DeviceCliHandlers
                 .Title(CLIConstants.UI.PROMPT_SELECT_DEVICE_START)
                 .AddChoices(devices));
 
-        var success = await AnsiConsole.Status()
+        var result = await AnsiConsole.Status()
             .StartAsync(string.Format(CLIConstants.UI.STATUS_STARTING_DEVICE, selectedDevice), async _ => await client.StartDeviceChannelsAsync(selectedDevice));
 
-        if (success)
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.MSG_START_DEVICE_SUCCESS, selectedDevice));
+        if (result.Success)
+        {
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.MSG_START_DEVICE_SUCCESS, Markup.Escape(selectedDevice)));
+            DisplayStreamsTable(result.Streams);
+        }
         else
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_START_DEVICE_FAILED, selectedDevice));
+        {
+            var msg = Markup.Escape(result.Message ?? CLIConstants.UNKNOWN_ERROR);
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_START_DEVICE_FAILED, Markup.Escape(selectedDevice), msg));
+        }
     }
 
     public static async Task HandleStopSpecificDeviceAsync(IUAVSimulatorCilent client)
@@ -124,9 +143,9 @@ public static class DeviceCliHandlers
             .StartAsync(string.Format(CLIConstants.UI.STATUS_STOPPING_DEVICE, selectedDevice), async _ => await client.StopDeviceChannelsAsync(selectedDevice));
 
         if (success)
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.MSG_STOP_DEVICE_SUCCESS, selectedDevice));
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.MSG_STOP_DEVICE_SUCCESS, Markup.Escape(selectedDevice)));
         else
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_STOP_DEVICE_FAILED, selectedDevice));
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_STOP_DEVICE_FAILED, Markup.Escape(selectedDevice)));
     }
 
     public static async Task HandleRemoveDeviceAsync(IUAVSimulatorCilent client)
@@ -143,7 +162,7 @@ public static class DeviceCliHandlers
                 .Title(CLIConstants.UI.PROMPT_SELECT_DEVICE_DELETE)
                 .AddChoices(devices));
 
-        var confirm = AnsiConsole.Confirm(string.Format(CLIConstants.UI.CONFIRM_DELETE_DEVICE, selectedDevice), defaultValue: false);
+        var confirm = AnsiConsole.Confirm(string.Format(CLIConstants.UI.CONFIRM_DELETE_DEVICE, Markup.Escape(selectedDevice)), defaultValue: false);
         if (!confirm)
         {
             AnsiConsole.MarkupLine(CLIConstants.UI.INFO_ACTION_CANCELED);
@@ -154,9 +173,9 @@ public static class DeviceCliHandlers
             .StartAsync(string.Format(CLIConstants.UI.STATUS_REMOVING_DEVICE, selectedDevice), async _ => await client.RemoveDeviceAsync(selectedDevice));
 
         if (success)
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.MSG_REMOVE_DEVICE_SUCCESS, selectedDevice));
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.MSG_REMOVE_DEVICE_SUCCESS, Markup.Escape(selectedDevice)));
         else
-            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_REMOVE_DEVICE_FAILED, selectedDevice));
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_REMOVE_DEVICE_FAILED, Markup.Escape(selectedDevice)));
     }
 
     public static async Task HandleAddDeviceAsync(IUAVSimulatorCilent client)
@@ -165,6 +184,18 @@ public static class DeviceCliHandlers
         var telemetryPath = AnsiConsole.Ask<string>(CLIConstants.UI.ASK_TELEMETRY_PATH).Trim('"', ' ');
         var multimediaPath = AnsiConsole.Ask<string>(CLIConstants.UI.ASK_MULTIMEDIA_PATH).Trim('"', ' ');
 
+        if (!File.Exists(telemetryPath))
+        {
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_FILE_NOT_FOUND, Markup.Escape(telemetryPath)));
+            return;
+        }
+
+        if (!File.Exists(multimediaPath))
+        {
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_FILE_NOT_FOUND, Markup.Escape(multimediaPath)));
+            return;
+        }
+
         var success = await AnsiConsole.Status()
             .StartAsync(CLIConstants.UI.STATUS_ADDING_DEVICE, async _ => await client.AddDeviceAsync(deviceName, telemetryPath, multimediaPath));
 
@@ -172,5 +203,25 @@ public static class DeviceCliHandlers
             AnsiConsole.MarkupLine(CLIConstants.UI.MSG_ADD_DEVICE_SUCCESS);
         else
             AnsiConsole.MarkupLine(CLIConstants.UI.ERR_ADD_DEVICE_FAILED);
+    }
+
+    private static void DisplayStreamsTable(List<DTOs.DeviceStreamInfo>? streams)
+    {
+        if (streams == null || streams.Count == 0)
+        {
+            AnsiConsole.MarkupLine(CLIConstants.UI.INFO_NO_ACTIVE_STREAMS);
+            return;
+        }
+
+        var table = new Table().Border(TableBorder.Rounded);
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_SIM_ID).Centered());
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_STREAM_URL));
+
+        foreach (var stream in streams)
+        {
+            table.AddRow(stream.SimId.ToString(), $"[deepskyblue1]{Markup.Escape(stream.RtspStream)}[/]");
+        }
+
+        AnsiConsole.Write(table);
     }
 }

@@ -11,9 +11,9 @@ namespace simulator_cli_client.Interfaces
         Task<List<string>> GetAllDevicesAsync(CancellationToken ct = default);
         Task<bool> AddDeviceAsync(string deviceName, string telemetryFilePath, string multimediaFilePath, CancellationToken ct = default);
         Task<bool> RemoveDeviceAsync(string deviceName, CancellationToken ct = default);
-        Task<bool> StartDeviceChannelsAsync(string deviceName, CancellationToken ct = default);
+        Task<StartDeviceResponse> StartDeviceChannelsAsync(string deviceName, CancellationToken ct = default);
         Task<bool> StopDeviceChannelsAsync(string deviceName, CancellationToken ct = default);
-        Task<ApiResponse> StartAllDevicesChannelsAsync(CancellationToken ct = default);
+        Task<StartDeviceResponse> StartAllDevicesChannelsAsync(CancellationToken ct = default);
         Task<ApiResponse> StopAllDevicesChannelsAsync(CancellationToken ct = default);
     }
 }
