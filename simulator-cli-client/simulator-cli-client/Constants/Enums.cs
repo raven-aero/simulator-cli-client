@@ -9,5 +9,6 @@ public enum MenuAction
     StopSpecificDevice = 5,
     AddDevice = 6,
     RemoveDevice = 7,
+    GetActiveStreams = 8,
     Exit = 0
 }

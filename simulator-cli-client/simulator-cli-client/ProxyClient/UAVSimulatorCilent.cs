@@ -90,5 +90,11 @@ namespace simulator_cli_client.Services
             return await response.Content.ReadFromJsonAsync<ApiResponse>(cancellationToken: ct)
                    ?? new ApiResponse(false, UNKNOWN_ERROR);
         }
+
+        public async Task<GetActiveStreamsResponse> GetActiveStreamsAsync(CancellationToken ct = default)
+        {
+            var response = await _httpClient.GetFromJsonAsync<GetActiveStreamsResponse>(ProxyAPIs.GET_ACTIVE_STREAMS_ROUTE, ct);
+            return response ?? new GetActiveStreamsResponse(false, Enumerable.Empty<ChannelDTO>());
+        }
     }
 }

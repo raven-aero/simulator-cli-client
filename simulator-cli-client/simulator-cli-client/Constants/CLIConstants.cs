@@ -19,6 +19,7 @@ public static class CLIConstants
         [MenuAction.StopSpecificDevice] = "5. Stop Specific Device",
         [MenuAction.AddDevice] = "6. Add Device",
         [MenuAction.RemoveDevice] = "7. Remove Device",
+        [MenuAction.GetActiveStreams] = "8. Get Active Streams",
         [MenuAction.Exit] = "0. Exit"
     };
 
@@ -35,6 +36,8 @@ public static class CLIConstants
         public const string STOP_DEVICE_ROUTE = BASE_ROUTE + "/Stop";
         public const string STARTALL_DEVICE_ROUTE = BASE_ROUTE + "/StartAll";
         public const string STOPALL_DEVICE_ROUTE = BASE_ROUTE + "/StopAll";
+
+        public const string GET_ACTIVE_STREAMS_ROUTE = BASE_ROUTE + "/ActiveStreams";
     }
 
     public static class UI
@@ -47,6 +50,7 @@ public static class CLIConstants
         public const string STATUS_STOPPING_DEVICE = "Stopping device {0}...";
         public const string STATUS_REMOVING_DEVICE = "Removing device {0}...";
         public const string STATUS_ADDING_DEVICE = "Uploading and creating device...";
+        public const string STATUS_FETCHING_ACTIVE_STREAMS = "Fetching active streams...";
 
         // Prompts & Questions
         public const string ASK_DEVICE_NAME = "Enter [cyan]Device Name[/]:";
@@ -91,5 +95,22 @@ public static class CLIConstants
         public const string ERR_FILE_NOT_FOUND = "[bold red]✖ File Not Found:[/] [red]{0}[/]";
         public const string ERR_TIMEOUT = "[bold yellow]⚠ Request timed out or was canceled.[/]";
         public const string ERR_UNEXPECTED = "[bold red]✖ Unexpected Error:[/] [red]{0}[/]";
+
+        // Table Columns
+        public const string TABLE_COL_CHANNEL_ID = "Channel ID";
+        public const string TABLE_COL_SOURCE_ID = "Source ID";
+        public const string TABLE_COL_TYPE = "Type";
+        public const string TABLE_COL_ENDPOINT = "Stream Endpoint";
+        public const string TABLE_COL_PID = "PID";
+        public const string TABLE_COL_STATUS = "Status";
+
+        // Status & Fallback Labels
+        public const string STATUS_ACTIVE_TAG = "[green]Active[/]";
+        public const string STATUS_INACTIVE_TAG = "[red]Inactive[/]";
+        public const string VALUE_NOT_AVAILABLE = "[grey]N/A[/]";
+
+        // Format templates
+        public const string FORMAT_TYPE_TAG = "[yellow]{0}[/]";
+        public const string FORMAT_ENDPOINT_TAG = "[deepskyblue1]{0}[/]";
     }
 }

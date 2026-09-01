@@ -181,9 +181,9 @@ public static class DeviceCliHandlers
     public static async Task HandleAddDeviceAsync(IUAVSimulatorCilent client)
     {
         var deviceName = AnsiConsole.Ask<string>(CLIConstants.UI.ASK_DEVICE_NAME).Trim();
-        var telemetryPath = AnsiConsole.Ask<string>(CLIConstants.UI.ASK_TELEMETRY_PATH).Trim('"', ' ');
         var multimediaPath = AnsiConsole.Ask<string>(CLIConstants.UI.ASK_MULTIMEDIA_PATH).Trim('"', ' ');
-
+        var telemetryPath = AnsiConsole.Ask<string>(CLIConstants.UI.ASK_TELEMETRY_PATH).Trim('"', ' ');
+        
         if (!File.Exists(telemetryPath))
         {
             AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_FILE_NOT_FOUND, Markup.Escape(telemetryPath)));
@@ -204,8 +204,23 @@ public static class DeviceCliHandlers
         else
             AnsiConsole.MarkupLine(CLIConstants.UI.ERR_ADD_DEVICE_FAILED);
     }
+    public static async Task HandleListActiveStreamsAsync(IUAVSimulatorCilent client)
+    {
+        var result = await AnsiConsole.Status()
+            .Spinner(Spinner.Known.Dots)
+            .StartAsync(CLIConstants.UI.STATUS_FETCHING_ACTIVE_STREAMS, async _ => await client.GetActiveStreamsAsync());
 
-    private static void DisplayStreamsTable(List<DTOs.DeviceStreamInfo>? streams)
+        if (result.Success)
+        {
+            DisplayActiveStreamsTable(result);
+        }
+        else
+        {
+            AnsiConsole.MarkupLine(string.Format(CLIConstants.UI.ERR_ACTION_FAILED, CLIConstants.UNKNOWN_ERROR));
+        }
+    }
+
+    private static void DisplayStreamsTable(List<DTOs.DeviceStreamInfo>?  streams)
     {
         if (streams == null || streams.Count == 0)
         {
@@ -220,6 +235,49 @@ public static class DeviceCliHandlers
         foreach (var stream in streams)
         {
             table.AddRow(stream.SimId.ToString(), $"[deepskyblue1]{Markup.Escape(stream.RtspStream)}[/]");
+        }
+
+        AnsiConsole.Write(table);
+    }
+
+    private static void DisplayActiveStreamsTable(DTOs.GetActiveStreamsResponse? response)
+    {
+        var streams = response?.Streams?.ToList();
+
+        if (streams == null || streams.Count == 0)
+        {
+            AnsiConsole.MarkupLine(CLIConstants.UI.INFO_NO_ACTIVE_STREAMS);
+            return;
+        }
+
+        var table = new Table().Border(TableBorder.Rounded);
+
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_CHANNEL_ID).Centered());
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_SOURCE_ID).Centered());
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_TYPE).Centered());
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_ENDPOINT));
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_PID).Centered());
+        table.AddColumn(new TableColumn(CLIConstants.UI.TABLE_COL_STATUS).Centered());
+
+        foreach (var channel in streams)
+        {
+            var status = channel.IsActive
+                ? CLIConstants.UI.STATUS_ACTIVE_TAG : CLIConstants.UI.STATUS_INACTIVE_TAG;
+
+            var pid = channel.FFmpegProcessId.HasValue
+                ? channel.FFmpegProcessId.Value.ToString() : CLIConstants.UI.VALUE_NOT_AVAILABLE;
+
+            var type = string.Format(CLIConstants.UI.FORMAT_TYPE_TAG, Markup.Escape(channel.Type));
+            var endpoint = string.Format(CLIConstants.UI.FORMAT_ENDPOINT_TAG, Markup.Escape(channel.StreamEndpoint));
+
+            table.AddRow(
+                channel.Id.ToString(),
+                channel.SourceFilesId.ToString(),
+                type,
+                endpoint,
+                pid,
+                status
+            );
         }
 
         AnsiConsole.Write(table);
