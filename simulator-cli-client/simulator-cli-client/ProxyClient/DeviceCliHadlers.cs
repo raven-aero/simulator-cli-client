@@ -220,7 +220,7 @@ public static class DeviceCliHandlers
         }
     }
 
-    private static void DisplayStreamsTable(List<DTOs.DeviceStreamInfo>?  streams)
+    private static void DisplayStreamsTable(List<DTOs.DeviceStreamInfo>? streams)
     {
         if (streams == null || streams.Count == 0)
         {
