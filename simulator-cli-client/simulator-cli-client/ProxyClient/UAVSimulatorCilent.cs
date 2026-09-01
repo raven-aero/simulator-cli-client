@@ -18,6 +18,7 @@ namespace simulator_cli_client.Services
         { 
             this._httpClient = client;
         }
+
         public async Task<List<string>> GetAllDevicesAsync(CancellationToken ct = default)
         {
             var response = await this._httpClient.GetFromJsonAsync<GetAllDevicesResponse>(ProxyAPIs.BASE_ROUTE, ct);
