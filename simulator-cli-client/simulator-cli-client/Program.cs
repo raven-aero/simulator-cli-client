@@ -50,6 +50,9 @@ public class Program
                     case MenuAction.StopSpecificDevice:
                         await DeviceCliHandlers.HandleStopSpecificDeviceAsync(proxyClient);
                         break;
+                    case MenuAction.GetActiveStreams:
+                        await DeviceCliHandlers.HandleListActiveStreamsAsync(proxyClient);
+                        break;
                     case MenuAction.AddDevice:
                         await DeviceCliHandlers.HandleAddDeviceAsync(proxyClient);
                         break;

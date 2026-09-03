@@ -15,5 +15,6 @@ namespace simulator_cli_client.Interfaces
         Task<bool> StopDeviceChannelsAsync(string deviceName, CancellationToken ct = default);
         Task<StartDeviceResponse> StartAllDevicesChannelsAsync(CancellationToken ct = default);
         Task<ApiResponse> StopAllDevicesChannelsAsync(CancellationToken ct = default);
+        Task<GetActiveStreamsResponse> GetActiveStreamsAsync(CancellationToken ct = default);
     }
 }
